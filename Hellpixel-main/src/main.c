@@ -9,7 +9,7 @@
 #define MAP_HEIGHT 24
 #define MAP_WIDTH 72
 
-#define COLOR_WALL GREEN
+#define COLOR_WALL BLUE
 #define COLOR_FLOOR GREEN
 #define COLOR_BULLET YELLOW
 #define MAX_BULLETS 100
@@ -25,6 +25,22 @@ struct Bullet *bullets;
 struct Enemy  *enemies;
 int enemyCapacity = 15;
 int score = 0;
+
+void screenDrawMap();
+void initLena(struct Lena *lena);
+void drawLena(int x, int y);
+void initEnemy(struct Enemy *enemy);
+void updateEnemy(struct Enemy *enemy, struct Lena *lena);
+void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime);
+void initBullet(struct Bullet *bullet, struct Lena *lena);
+int checkCollision(int x1, int y1, int x2, int y2);
+void updateBullet(struct Bullet *bullet);
+int isWall(int x, int y);
+void showStartArt();
+void showInstructions();
+void showVictory();
+void showGameOver();
+
 
 char map[MAP_HEIGHT][MAP_WIDTH] = {
     "############################                 ###########################",
