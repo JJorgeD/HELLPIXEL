@@ -9,7 +9,7 @@
 #define MAP_HEIGHT 24
 #define MAP_WIDTH 72
 
-#define COLOR_WALL BLUE
+#define COLOR_WALL GREEN
 #define COLOR_FLOOR GREEN
 #define COLOR_BULLET YELLOW
 #define MAX_BULLETS 100
@@ -17,9 +17,9 @@
 #define GAME_DURATION 60 * 75
 
 struct Position { int x, y; };
-struct Lena     { struct Position coords; int health; int ammo; };
-struct Enemy    { struct Position coords; int health; int onScreen; };
-struct Bullet   { struct Position coords; int onScreen; int direction; };
+struct Lena      { struct Position coords; int health; int ammo; };
+struct Enemy     { struct Position coords; int health; int onScreen; };
+struct Bullet    { struct Position coords; int onScreen; int direction; };
 
 struct Bullet *bullets;
 struct Enemy  *enemies;
@@ -41,24 +41,49 @@ void showInstructions();
 void showVictory();
 void showGameOver();
 
-
 char map[MAP_HEIGHT][MAP_WIDTH] = {
-    "############################                 ###########################",
-    "############################                 ###########################",
-    "###                                                                   ##",
-    "############################                 ###########################",
+    "############################ ###########################",
+    "############################ ###########################",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    " ",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "### ##",
+    "############################ ###########################",
+
 };
 
 void screenDrawMap() {
     for (int y = 0; y < MAP_HEIGHT; y++) {
         for (int x = 0; x < MAP_WIDTH; x++) {
+            char cell = map[y][x];
             screenGotoxy(x, y);
-            if (map[y][x] == '#') {
-                screenSetColor(COLOR_WALL, BLACK);
-                printf("▓");
-            } else {
-                screenSetColor(COLOR_FLOOR, BLACK);
-                printf(" ");
+
+            switch (cell) {
+                case '#':
+                    screenSetColor(COLOR_WALL, BLACK);
+                    printf("▓");
+                    break;
+                default:
+                    screenSetColor(COLOR_FLOOR, BLACK);
+                    printf(" ");
+                    break;
             }
         }
     }
@@ -209,7 +234,6 @@ int main() {
             }
         }
     }
-
 
     if (elapsedTime >= GAME_DURATION / 75) {
         showVictory();
