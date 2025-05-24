@@ -37,6 +37,7 @@ void updateBullet(struct Bullet *bullet);
 
 void initLena(struct Lena *lena);
 void drawLena(int x, int y);
+void checkLenaDamage(struct Lena *lena);
 
 void showStartArt();
 void showInstructions();
@@ -131,6 +132,7 @@ int main() {
                 screenDrawMap();
                 drawLena(lena.coords.x, lena.coords.y);
                 spawnEnemy(&lena, frameCount, elapsedTime);
+                checkLenaDamage(&lena);
 
                 if (lena.ammo < MAX_BULLETS && reloadTime <= 0) {
                     reloadTime = 2500 / 75;
@@ -305,6 +307,12 @@ void updateEnemy(struct Enemy *enemy, struct Lena *lena) {
     enemy->coords.y++;
     if (enemy->coords.y > lena->coords.y) {
         enemy->onScreen = 0;
+        lena->health--;
+        return;
+    }
+
+    if (enemy->coords.y >= MAP_HEIGHT - 1 || isWall(enemy->coords.x, enemy->coords.y)) {
+        enemy->onScreen = 0;
     }
 }
 
@@ -321,7 +329,7 @@ void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime) {
     }
 
     for (int i = 0; i < enemyCapacity; i++) {
-        if (enemies[i].onScreen) {
+        if (enemies[i].onScreen && enemies[i].health > 0) {
             updateEnemy(&enemies[i], lena);
             drawEnemy(enemies[i].coords.x, enemies[i].coords.y);
         }
@@ -390,6 +398,16 @@ int checkCollision(int x1, int y1, int x2, int y2) {
 
 int isWall(int x, int y) {
     return (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT || map[y][x] == '#');
+}
+
+void checkLenaDamage(struct Lena *lena) {
+    for (int i = 0; i < enemyCapacity; i++) {
+        if (enemies[i].onScreen &&
+            checkCollision(lena->coords.x, lena->coords.y, enemies[i].coords.x, enemies[i].coords.y)) {
+            lena->health--;
+            break;
+        }
+    }
 }
 
 void showStartArt() {
