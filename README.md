@@ -7,20 +7,18 @@ Desenvolvido em linguagem C, o jogo utiliza uma engine baseada em caracteres ASC
 🎮 Sobre o Jogo
 
 Neste jogo você:
-- Controla a personagem Lena em um mapa de 72x24.
-- Deve eliminar inimigos que surgem constantemente nas bordas do mapa.
+- Controla a personagem Lena em um mapa renderizado no terminal.
+- Deve eliminar inimigos que surgem constantemente no topo do mapa.
 - Pode atirar com munição limitada (balas).
 - Deve sobreviver o maior tempo possível, administrando saúde, recarregando munição e evitando inimigos.
-- Possui um sistema de pontuação e ranking.
+- Possui um sistema de pontuação salvo em um arquivo ao final do jogo.
 
 
 🕹️ Como Jogar
 
 Controles principais:
-- `W`, `A`, `S`, `D`: movimentam a personagem para, esquerda e direita.
-- `ESPACO`: atira na direção atual.
-- `R`: recarrega as balas (tempo de recarga é necessário).
-- `Q`: sai do jogo.
+- `A`, `D`: movimentam a personagem para esquerda e direita.
+- `F`: atira na direção atual.
 
 Objetivo:
 - Sobreviver ao máximo contra inimigos que aparecem em intervalos regulares.
@@ -42,7 +40,7 @@ Requisitos
 Para compilar e executar o jogo, é necessário um sistema compatível com:
 - GCC (compilador C)
 - Linux/macOS com terminal
-- Biblioteca padrão `unistd.h`, `time.h`, `math.h`, `stdio.h`, `stdlib.h`, `string.h`
+- Biblioteca padrão cli-bi: https://github.com/tgfb/cli-lib/
 
 
 ## ⚙️ Instruções de Compilação
@@ -69,5 +67,8 @@ Para compilar e executar o jogo, é necessário um sistema compatível com:
 ---
 
 🏆 Créditos
+
+ Video demonstrativo do jogo:
+https://youtu.be/cX3LpLzaX9M
 
 Desenvolvido por Rodrigo Tenório, Mirna Lustosa e Jorge Dias.  
