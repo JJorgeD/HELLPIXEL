@@ -21,6 +21,12 @@ struct Lena      { struct Position coords; int health; int ammo; };
 struct Enemy     { struct Position coords; int health; int onScreen; };
 struct Bullet    { struct Position coords; int onScreen; int direction; };
 
+struct Node{
+    char *name;
+    int score;
+    struct Node *next;
+};
+
 struct Bullet *bullets;
 struct Enemy  *enemies;
 int enemyCapacity = 15;
@@ -31,6 +37,7 @@ int score = 0;
 void screenDrawMap();
 int isWall(int x, int y);
 int checkCollision(int x1, int y1, int x2, int y2);
+void recordScore(const char *playerName, int playerScore);
 void drawBullet(int x, int y);
 void initBullet(struct Bullet *bullet, struct Lena *lena);
 void updateBullet(struct Bullet *bullet);
@@ -84,6 +91,7 @@ int main() {
     keyboardInit();
     timerInit(75);
     srand(time(NULL));
+    char playerName[50] = {0};
 
     while (1) {
         showStartArt();
@@ -91,6 +99,24 @@ int main() {
             if (keyhit()) {
                 int key = readch();
                 if (key == '1') {
+                    screenClear();
+                    screenGotoxy(0, MAP_HEIGHT + 2);
+                    screenSetColor(WHITE, BLACK);
+                    printf("Digite seu nome: ");
+                    fflush(stdout);
+
+                    if (!fgets(playerName, sizeof(playerName), stdin)) {
+                        playerName[0] = '\0';
+                        if (strlen(playerName) == 0 || playerName[0] == '\n') {
+                            strcpy(playerName, "Jogador");
+                        }
+                    } else {
+                        playerName[strcspn(playerName, "\n")] = '\0';
+                        if (strlen(playerName) == 0) {
+                            strcpy(playerName, "Jogador");
+                        }
+                    }
+
                     showMenu = 0;
                     break;
                 }
@@ -99,6 +125,8 @@ int main() {
                     showMenu = 1;
                 }
                 else if (key == '3') {
+                    recordScore(playerName, score);
+                    screenClear();
                     return 0;
                 }
             }
@@ -177,9 +205,11 @@ int main() {
                                 time(&startTime);
                                 lastSpawnFrame = 0;
                                 frameCount = 0;
+                                recordScore(playerName, score);
                                 break;
                             }
                             else if (key == 'q') {
+                                recordScore(playerName, score);
                                 free(bullets);
                                 free(enemies);
                                 return 0;
@@ -206,9 +236,11 @@ int main() {
                                 time(&startTime);
                                 lastSpawnFrame = 0;
                                 frameCount = 0;
+                                recordScore(playerName, score);
                                 break;
                             }
                             else if (key == 'q') {
+                                recordScore(playerName, score);
                                 free(bullets);
                                 free(enemies);
                                 return 0;
@@ -267,6 +299,7 @@ int main() {
         bullets = NULL;
         enemies = NULL;
     }
+    recordScore(playerName, score);
     return 0;
 }
 
@@ -492,4 +525,30 @@ void showGameOver() {
     printf("\n\n\t\t\t\t Não foi dessa vez!\n");
     printf("\t\t\t\t Pontuação Final: %d\n", score);
     printf("\t\t\tInsira r para reiniciar o jogo ou q para sair.\n");
+}
+
+void recordScore(const char *playerName, int playerScore) {
+    struct Node *head = malloc(sizeof(*head));
+    if (!head) return;
+    head->name = malloc(strlen(playerName) + 1);
+    if (head->name) strcpy(head->name, playerName);
+    head->score = playerScore;
+    head->next = NULL;
+
+    FILE *f = fopen("score.txt", "a");
+    if (f) {
+        struct Node *cur = head;
+        while (cur) {
+            fprintf(f, "%s %d\n", cur->name, cur->score);
+            cur = cur->next;
+        }
+        fclose(f);
+    }
+    struct Node *tmp;
+    while (head) {
+        tmp = head;
+        head = head->next;
+        free(tmp->name);
+        free(tmp);
+    }
 }
