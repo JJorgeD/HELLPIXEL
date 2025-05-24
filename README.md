@@ -32,7 +32,7 @@ Estrutura do Projeto
 - `src/`: arquivos-fonte do jogo (`main.c`, `keyboard.c`, `screen.c`, `timer.c`)
 - `include/`: cabeçalhos com declarações das funções e structs.
 - `menu/`: arquivos `.txt` com telas de início, vitória e derrota.
-- `leaderboard/`: rankings de pontuação.
+- `score/`: rankings de pontuação.
 - `makefile`: automação de compilação.
 - `HellPixel.out`: binário gerado após compilação.
 
