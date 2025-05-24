@@ -16,23 +16,48 @@
 #define ENEMY_SPAWN_INTERVAL 30
 #define GAME_DURATION 60 * 75
 
-struct Position { int x, y; };
-struct Lena      { struct Position coords; int health; int ammo; };
-struct Enemy     { struct Position coords; int health; int onScreen; };
-struct Bullet    { struct Position coords; int onScreen; int direction; };
+struct Position
+{
+    int x, y;
+};
+
+struct Lena
+{
+    struct Position coords;
+    int health;
+    int ammo;
+};
+
+struct Enemy
+{
+    struct Position coords;
+    int health;
+    int onScreen;
+};
+
+struct Bullet
+{
+    struct Position coords;
+    int onScreen;
+    int direction;
+};
 
 struct Node{
     char *name;
     int score;
-    struct Node *next;
+    struct Node *next; 
 };
 
+
 struct Bullet *bullets;
-struct Enemy  *enemies;
+struct Enemy *enemies;
 int enemyCapacity = 15;
 int lastSpawnFrame = 0;
 int reloadTime = 0;
 int score = 0;
+int enemiesMoveTimer = 0;
+int enemiesMoveSpeed = 75 / 15; 
+
 
 void screenDrawMap();
 int isWall(int x, int y);
@@ -56,49 +81,57 @@ void drawEnemy(int x, int y);
 void updateEnemy(struct Enemy *enemy, struct Lena *lena);
 void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime);
 
+void addNode(struct Node **head, char *name, int score);
+void saveLeaderboard(struct Node *head);
+void freeList(struct Node *head);
+
 char map[MAP_HEIGHT][MAP_WIDTH] = {
-    "############################ ###########################",
-    "############################ ###########################",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    " ",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "### ##",
-    "############################ ###########################",
+    "############################                 ###########################",
+    "############################                 ###########################",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "                                                                        ",
+    "                                                                        ",
+    "                                                                        ",
+    "                                                                        ",
+    "                                                                        ",
+    "                                                                        ",
+    "                                                                        ",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "###                                                                   ##",
+    "############################                 ###########################",
 
 };
-
 int showMenu = 1;
 
-int main() {
+int main()
+{
     screenInit(0);
     keyboardInit();
     timerInit(75);
     srand(time(NULL));
     char playerName[50] = {0};
 
-    while (1) {
+    while (1)
+    {
         showStartArt();
-        while (1) {
-            if (keyhit()) {
+        while (1)
+        {
+            if (keyhit())
+            {
                 int key = readch();
-                if (key == '1') {
+                if (key == '1')
+                {
                     screenClear();
                     screenGotoxy(0, MAP_HEIGHT + 2);
                     screenSetColor(WHITE, BLACK);
@@ -120,11 +153,13 @@ int main() {
                     showMenu = 0;
                     break;
                 }
-                else if (key == '2') {
+                else if (key == '2')
+                {
                     showInstructions();
                     showMenu = 1;
                 }
-                else if (key == '3') {
+                else if (key == '3')
+                {
                     recordScore(playerName, score);
                     screenClear();
                     return 0;
@@ -142,31 +177,38 @@ int main() {
 
         bullets = malloc(MAX_BULLETS * sizeof(struct Bullet));
         enemies = malloc(enemyCapacity * sizeof(struct Enemy));
-        if (!bullets || !enemies) {
+        if (!bullets || !enemies)
+        {
             return 1;
         }
 
-        for (int i = 0; i < enemyCapacity; i++) {
+        for (int i = 0; i < enemyCapacity; i++)
+        {
             enemies[i].onScreen = 0;
         }
 
-        while (1) {
+        while (1)
+        {
             time(&currentTime);
             elapsedTime = difftime(currentTime, startTime);
-            if (timerTimeOver()) {
+            if (timerTimeOver())
+            {
                 frameCount++;
                 double remainingTime = GAME_DURATION / 75 - elapsedTime;
+                
 
                 screenDrawMap();
                 drawLena(lena.coords.x, lena.coords.y);
                 spawnEnemy(&lena, frameCount, elapsedTime);
                 checkLenaDamage(&lena);
 
-                if (lena.ammo < MAX_BULLETS && reloadTime <= 0) {
+                if (lena.ammo < MAX_BULLETS && reloadTime <= 0)
+                {
                     reloadTime = 2500 / 75;
                     lena.ammo++;
                 }
-                else if (reloadTime > 0) {
+                else if (reloadTime > 0)
+                {
                     reloadTime--;
                 }
 
@@ -182,25 +224,28 @@ int main() {
                     printf("%.0lf", remainingTime);
                 }
                 screenGotoxy(MAP_WIDTH - 20, MAP_HEIGHT);
-                printf(" ");
+                printf("                             ");
                 screenGotoxy(MAP_WIDTH - 20, MAP_HEIGHT);
                 for (int i = 0; i < lena.health; i++)
                     printf("❤");
 
-
-                if (elapsedTime >= GAME_DURATION / 75) {
+                if (elapsedTime >= GAME_DURATION / 75)
+                {
                     showVictory();
-                    while (1) {
-                        if (keyhit()) {
+                    while (1)
+                    {
+                        if (keyhit())
+                        {
                             int key = readch();
-                            if (key == 'r') {
+                            if (key == 'r')
+                            {
                                 lena.health = 10;
-                                lena.ammo = MAX_BULLETS;
+                                lena.ammo   = MAX_BULLETS;
                                 lena.coords.x = MAP_WIDTH/2;
                                 lena.coords.y = MAP_HEIGHT/2;
                                 score = 0;
-                                memset(bullets, 0, MAX_BULLETS * sizeof(*bullets));
-                                memset(enemies, 0, enemyCapacity * sizeof(*enemies));
+                                memset(bullets,  0, MAX_BULLETS  * sizeof(*bullets));
+                                memset(enemies,  0, enemyCapacity  * sizeof(*enemies));
                                 screenClear();
                                 time(&startTime);
                                 lastSpawnFrame = 0;
@@ -208,7 +253,8 @@ int main() {
                                 recordScore(playerName, score);
                                 break;
                             }
-                            else if (key == 'q') {
+                            else if (key == 'q')
+                            {
                                 recordScore(playerName, score);
                                 free(bullets);
                                 free(enemies);
@@ -219,12 +265,16 @@ int main() {
                     break;
                 }
 
-                if (lena.health <= 0) {
+                if (lena.health <= 0)
+                {
                     showGameOver();
-                    while (1) {
-                        if (keyhit()) {
+                    while (1)
+                    {
+                        if (keyhit())
+                        {
                             int key = readch();
-                            if (key == 'r') {
+                            if (key == 'r')
+                            {
                                 lena.health = 10;
                                 lena.ammo = 8;
                                 lena.coords.x = MAP_WIDTH / 2;
@@ -239,7 +289,8 @@ int main() {
                                 recordScore(playerName, score);
                                 break;
                             }
-                            else if (key == 'q') {
+                            else if (key == 'q')
+                            {   
                                 recordScore(playerName, score);
                                 free(bullets);
                                 free(enemies);
@@ -250,10 +301,13 @@ int main() {
                     break;
                 }
 
-                for (int i = 0; i < MAX_BULLETS; i++) {
-                    if (bullets[i].onScreen) {
+                for (int i = 0; i < MAX_BULLETS; i++)
+                {
+                    if (bullets[i].onScreen)
+                    {
                         updateBullet(&bullets[i]);
-                        if (bullets[i].onScreen) {
+                        if (bullets[i].onScreen)
+                        {
                             drawBullet(bullets[i].coords.x, bullets[i].coords.y);
                         }
                     }
@@ -261,7 +315,8 @@ int main() {
                 screenUpdate();
             }
 
-            if (keyhit()) {
+            if (keyhit())
+            {
                 int key = readch();
                 int newX = lena.coords.x;
                 int newY = lena.coords.y;
@@ -271,17 +326,17 @@ int main() {
                 }
                 else if (key == 'd') {
                     newX++;
-                }
+                 }
                 else if (key == 'f' && lena.ammo > 0) {
                     for (int i = 0; i < MAX_BULLETS; i++) {
-                        if (!bullets[i].onScreen) {
-                            initBullet(&bullets[i], &lena);
-                            bullets[i].onScreen = 1;
-                            lena.ammo--;
-                            break;
-                        }
-                    }
+                    if (!bullets[i].onScreen) {
+                    initBullet(&bullets[i], &lena);
+                    bullets[i].onScreen = 1;
+                    lena.ammo--;
+                    break;
                 }
+            }
+        }
 
                 if (!isWall(newX, newY) &&
                     !isWall(newX + 1, newY) &&
@@ -291,7 +346,8 @@ int main() {
                     lena.coords.x = newX;
                     lena.coords.y = newY;
                 }
-            }
+    }
+
         }
 
         free(bullets);
@@ -303,21 +359,25 @@ int main() {
     return 0;
 }
 
-void screenDrawMap() {
-    for (int y = 0; y < MAP_HEIGHT; y++) {
-        for (int x = 0; x < MAP_WIDTH; x++) {
+void screenDrawMap()
+{
+    for (int y = 0; y < MAP_HEIGHT; y++)
+    {
+        for (int x = 0; x < MAP_WIDTH; x++)
+        {
             char cell = map[y][x];
             screenGotoxy(x, y);
 
-            switch (cell) {
-                case '#':
-                    screenSetColor(COLOR_WALL, BLACK);
-                    printf("▓");
-                    break;
-                default:
-                    screenSetColor(COLOR_FLOOR, BLACK);
-                    printf(" ");
-                    break;
+            switch (cell)
+            {
+            case '#':
+                screenSetColor(COLOR_WALL,  BLACK);
+                printf("▓");
+                break;
+            default:
+                screenSetColor(COLOR_FLOOR, BLACK);
+                printf(" ");
+                break;
             }
         }
     }
@@ -325,19 +385,30 @@ void screenDrawMap() {
     fflush(stdout);
 }
 
-void drawEnemy(int x, int y) {
+void drawEnemy(int x, int y)
+{
     screenGotoxy(x, y);
     printf("👾");
 }
 
-void initEnemy(struct Enemy *enemy) {
+void initEnemy(struct Enemy *enemy)
+{
     enemy->coords.x = rand() % (MAP_WIDTH - 2) + 1;
     enemy->coords.y = 1;
     enemy->health = 1;
 }
 
-void updateEnemy(struct Enemy *enemy, struct Lena *lena) {
+
+
+void updateEnemy(struct Enemy *enemy, struct Lena *lena)
+{
+    enemiesMoveTimer++;
+    if (enemiesMoveTimer < enemiesMoveSpeed)
+        return;
+    enemiesMoveTimer = 0;
+
     enemy->coords.y++;
+
     if (enemy->coords.y > lena->coords.y) {
         enemy->onScreen = 0;
         lena->health--;
@@ -349,10 +420,16 @@ void updateEnemy(struct Enemy *enemy, struct Lena *lena) {
     }
 }
 
-void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime) {
-    if (elapsedTime < GAME_DURATION / 75 && frameCount - lastSpawnFrame >= ENEMY_SPAWN_INTERVAL) {
-        for (int i = 0; i < enemyCapacity; i++) {
-            if (!enemies[i].onScreen) {
+
+
+void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime)
+{
+    if (elapsedTime < GAME_DURATION / 75 && frameCount - lastSpawnFrame >= ENEMY_SPAWN_INTERVAL)
+    {
+        for (int i = 0; i < enemyCapacity; i++)
+        {
+            if (!enemies[i].onScreen)
+            {
                 initEnemy(&enemies[i]);
                 enemies[i].onScreen = 1;
                 lastSpawnFrame = frameCount;
@@ -361,40 +438,49 @@ void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime) {
         }
     }
 
-    for (int i = 0; i < enemyCapacity; i++) {
-        if (enemies[i].onScreen && enemies[i].health > 0) {
+    for (int i = 0; i < enemyCapacity; i++)
+    {
+        if (enemies[i].onScreen && enemies[i].health > 0)
+        {
             updateEnemy(&enemies[i], lena);
             drawEnemy(enemies[i].coords.x, enemies[i].coords.y);
+
+            
+
         }
     }
 }
 
-void drawLena(int x, int y) {
+void drawLena(int x, int y)
+{
     screenGotoxy(x, y);
     printf("👩‍🚀");
 }
 
-void initLena(struct Lena *lena) {
+void initLena(struct Lena *lena)
+{
     lena->coords.x = MAP_WIDTH / 2;
-    lena->coords.y = MAP_HEIGHT - 2;
+    lena->coords.y = MAP_HEIGHT - 2; 
     lena->health = 10;
     lena->ammo = MAX_BULLETS;
 }
 
-void drawBullet(int x, int y) {
+void drawBullet(int x, int y)
+{
     screenSetColor(COLOR_BULLET, BLACK);
     screenGotoxy(x, y);
     printf("•");
 }
-
-void initBullet(struct Bullet *bullet, struct Lena *lena) {
+void initBullet(struct Bullet *bullet, struct Lena *lena)
+{
     bullet->coords.x = lena->coords.x;
     bullet->coords.y = lena->coords.y - 1;
     bullet->onScreen = 1;
     bullet->direction = 0;
 }
 
-void updateBullet(struct Bullet *bullet) {
+void updateBullet(struct Bullet *bullet)
+{
     int nextX = bullet->coords.x;
     int nextY = bullet->coords.y;
 
@@ -403,10 +489,12 @@ void updateBullet(struct Bullet *bullet) {
     else if (bullet->direction == 2) nextY++;
     else if (bullet->direction == 3) nextX++;
 
-    for (int i = 0; i < enemyCapacity; i++) {
+    for (int i = 0; i < enemyCapacity; i++)
+    {
         if (enemies[i].onScreen &&
             enemies[i].coords.x == nextX &&
-            enemies[i].coords.y == nextY) {
+            enemies[i].coords.y == nextY)
+        {
             bullet->onScreen = 0;
             enemies[i].health--;
             if (enemies[i].health <= 0)
@@ -416,7 +504,8 @@ void updateBullet(struct Bullet *bullet) {
         }
     }
 
-    if (isWall(nextX, nextY) || nextX < 0 || nextX >= MAP_WIDTH || nextY < 0 || nextY >= MAP_HEIGHT) {
+    if (isWall(nextX, nextY) || nextX < 0 || nextX >= MAP_WIDTH || nextY < 0 || nextY >= MAP_HEIGHT)
+    {
         bullet->onScreen = 0;
         return;
     }
@@ -425,28 +514,35 @@ void updateBullet(struct Bullet *bullet) {
     bullet->coords.y = nextY;
 }
 
-int checkCollision(int x1, int y1, int x2, int y2) {
+int checkCollision(int x1, int y1, int x2, int y2)
+{
     return x1 == x2 && y1 == y2;
 }
 
-int isWall(int x, int y) {
+int isWall(int x, int y)
+{
     return (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT || map[y][x] == '#');
 }
 
-void checkLenaDamage(struct Lena *lena) {
-    for (int i = 0; i < enemyCapacity; i++) {
+void checkLenaDamage(struct Lena *lena)
+{
+    for (int i = 0; i < enemyCapacity; i++)
+    {
         if (enemies[i].onScreen &&
-            checkCollision(lena->coords.x, lena->coords.y, enemies[i].coords.x, enemies[i].coords.y)) {
+            checkCollision(lena->coords.x, lena->coords.y, enemies[i].coords.x, enemies[i].coords.y))
+        {
             lena->health--;
             break;
         }
     }
 }
 
-void showStartArt() {
+void showStartArt()
+{
     screenClear();
     FILE *file = fopen("menu/start.txt", "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Erro ao abrir o arquivo start.txt\n");
         return;
     }
@@ -454,24 +550,27 @@ void showStartArt() {
     screenSetColor(RED, BLACK);
 
     char ch;
-    while ((ch = fgetc(file)) != EOF) {
+    while ((ch = fgetc(file)) != EOF)
+    {
         putchar(ch);
     }
 
     fclose(file);
 
     screenSetColor(WHITE, BLACK);
-    printf("\n\n\t\t\t Bem vindo à estação corrompida: HellPixel\n");
+    printf("\n\n\t\t\t  Bem vindo à estação corrompida: HellPixel\n");
     printf("\n\n\t\t\t\tEscolha uma opção:\n");
     printf("\t\t\t\t1. Iniciar Jogo\n");
     printf("\t\t\t\t2. Instruções\n");
     printf("\t\t\t\t3. Sair\n");
 }
 
-void showInstructions() {
+void showInstructions()
+{
     screenClear();
     FILE *file = fopen("menu/instructions.txt", "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Erro ao abrir o arquivo start.txt\n");
         return;
     }
@@ -479,17 +578,20 @@ void showInstructions() {
     screenSetColor(LIGHTBLUE, BLACK);
 
     char ch;
-    while ((ch = fgetc(file)) != EOF) {
+    while ((ch = fgetc(file)) != EOF)
+    {
         putchar(ch);
     }
 
     fclose(file);
 }
 
-void showVictory() {
+void showVictory()
+{
     screenClear();
     FILE *file = fopen("menu/victory.txt", "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Erro ao abrir o arquivo victory.txt\n");
         return;
     }
@@ -497,17 +599,20 @@ void showVictory() {
     screenSetColor(GREEN, BLACK);
 
     char ch;
-    while ((ch = fgetc(file)) != EOF) {
+    while ((ch = fgetc(file)) != EOF)
+    {
         putchar(ch);
     }
 
     fclose(file);
 }
 
-void showGameOver() {
+void showGameOver()
+{
     screenClear();
     FILE *file = fopen("menu/gameover.txt", "r");
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Erro ao abrir o arquivo gameover.txt\n");
         return;
     }
@@ -515,15 +620,16 @@ void showGameOver() {
     screenSetColor(RED, BLACK);
 
     char ch;
-    while ((ch = fgetc(file)) != EOF) {
+    while ((ch = fgetc(file)) != EOF)
+    {
         putchar(ch);
     }
 
     fclose(file);
 
     screenSetColor(WHITE, BLACK);
-    printf("\n\n\t\t\t\t Não foi dessa vez!\n");
-    printf("\t\t\t\t Pontuação Final: %d\n", score);
+    printf("\n\n\t\t\t\t   Não foi dessa vez! Tente Novamente!\n");
+    printf("\t\t\t\t   Pontuação Final: %d\n", score);
     printf("\t\t\tInsira r para reiniciar o jogo ou q para sair.\n");
 }
 
@@ -533,7 +639,7 @@ void recordScore(const char *playerName, int playerScore) {
     head->name = malloc(strlen(playerName) + 1);
     if (head->name) strcpy(head->name, playerName);
     head->score = playerScore;
-    head->next = NULL;
+    head->next  = NULL;
 
     FILE *f = fopen("score.txt", "a");
     if (f) {
@@ -546,7 +652,7 @@ void recordScore(const char *playerName, int playerScore) {
     }
     struct Node *tmp;
     while (head) {
-        tmp = head;
+        tmp  = head;
         head = head->next;
         free(tmp->name);
         free(tmp);
