@@ -103,17 +103,16 @@ void drawLena(int x, int y) {
     printf("👩‍🚀");
 }
 
-void initEnemy(struct Enemy *e) {
-    e->coords.x = rand() % (MAP_WIDTH - 2) + 1;
-    e->coords.y = 1;
-    e->health   = 1;
-    e->onScreen = 1;
+void initEnemy(struct Enemy *enemy) {
+    enemy->coords.x = rand() % (MAP_WIDTH - 2) + 1;
+    enemy->coords.y = 1;
+    enemy->health = 1;
 }
 
-void updateEnemy(struct Enemy *e, struct Lena *lena) {
-    e->coords.y++;
-    if (e->coords.y > lena->coords.y) {
-        e->onScreen = 0;
+void updateEnemy(struct Enemy *enemy, struct Lena *lena) {
+    enemy->coords.y++;
+    if (enemy->coords.y > lena->coords.y) {
+        enemy->onScreen = 0;
     }
 }
 
@@ -127,17 +126,18 @@ void spawnEnemy(struct Lena *lena, int frameCount, double elapsedTime) {
         for (int i = 0; i < enemyCapacity; i++) {
             if (!enemies[i].onScreen) {
                 initEnemy(&enemies[i]);
+                enemies[i].onScreen = 1;
                 break;
             }
         }
     }
 }
 
-void initBullet(struct Bullet *b, struct Lena *l) {
-    b->coords.x  = l->coords.x;
-    b->coords.y  = l->coords.y - 1;
-    b->onScreen  = 1;
-    b->direction = 0;
+void initBullet(struct Bullet *bullet, struct Lena *lena) {
+    bullet->coords.x = lena->coords.x;
+    bullet->coords.y = lena->coords.y - 1;
+    bullet->onScreen = 1;
+    bullet->direction = 0;
 }
 
 void drawBullet(int x, int y) {
@@ -150,22 +150,23 @@ int checkCollision(int x1, int y1, int x2, int y2) {
     return x1 == x2 && y1 == y2;
 }
 
-void updateBullet(struct Bullet *b) {
-    int nx = b->coords.x, ny = b->coords.y;
-    if (b->direction == 0) ny--;
+void updateBullet(struct Bullet *bullet) {
+    int nextX = bullet->coords.x;
+    int nextY = bullet->coords.y;
+    if (bullet->direction == 0) nextY--;
 
     for (int i = 0; i < enemyCapacity; i++) {
         if (enemies[i].onScreen &&
-            checkCollision(enemies[i].coords.x, enemies[i].coords.y, nx, ny)) {
+            checkCollision(enemies[i].coords.x, enemies[i].coords.y, nextX, nextY)) {
             enemies[i].onScreen = 0;
-            b->onScreen = 0;
+            bullet->onScreen = 0;
             score++;
             return;
         }
     }
 
-    b->coords.x = nx;
-    b->coords.y = ny;
+    bullet->coords.x = nextX;
+    bullet->coords.y = nextY;
 }
 
 int isWall(int x, int y) {
@@ -235,23 +236,70 @@ int main() {
         }
     }
 
-    if (elapsedTime >= GAME_DURATION / 75) {
-        showVictory();
-        while (1) {
-            int k = readch();
-            if (k == 'r') { break; }
-            if (k == 'q') return 0;
+    time_t startTime, currentTime;
+    time(&startTime);
+    double elapsedTime = 0;
+    int frameCount = 0;
+
+    struct Lena lena;
+    initLena(&lena);
+
+    bullets = malloc(MAX_BULLETS * sizeof(struct Bullet));
+    enemies = malloc(enemyCapacity * sizeof(struct Enemy));
+    if (!bullets || !enemies) {
+        return 1;
+    }
+
+    for (int i = 0; i < enemyCapacity; i++) {
+        enemies[i].onScreen = 0;
+    }
+
+    while (1) {
+        time(&currentTime);
+        elapsedTime = difftime(currentTime, startTime);
+        if (timerTimeOver()) {
+            frameCount++;
+            double remainingTime = GAME_DURATION / 75 - elapsedTime;
+
+            screenDrawMap();
+            drawLena(lena.coords.x, lena.coords.y);
+            spawnEnemy(&lena, frameCount, elapsedTime);
+
+            if (elapsedTime >= GAME_DURATION / 75) {
+                showVictory();
+                while (1) {
+                    int k = readch();
+                    if (k == 'r') { break; }
+                    if (k == 'q') return 0;
+                }
+                break;
+            }
+
+            if (lena.health <= 0) {
+                showGameOver();
+                while (1) {
+                    int k = readch();
+                    if (k == 'r') {break; }
+                    if (k == 'q') return 0;
+                }
+                break;
+            }
+
+            for (int i = 0; i < MAX_BULLETS; i++) {
+                if (bullets[i].onScreen) {
+                    updateBullet(&bullets[i]);
+                    if (bullets[i].onScreen) {
+                        drawBullet(bullets[i].coords.x, bullets[i].coords.y);
+                    }
+                }
+            }
+            screenUpdate();
         }
     }
 
-    if (lena.health <= 0) {
-        showGameOver();
-        while (1) {
-            int k = readch();
-            if (k == 'r') {break; }
-            if (k == 'q') return 0;
-        }
-    }
-
+    free(bullets);
+    free(enemies);
+    bullets = NULL;
+    enemies = NULL;
     return 0;
 }
